@@ -1,3 +1,5 @@
+package archive;
+
 public enum Operation { //действия, которые поддерживает архив
     CREATE, // создать архив
     ADD, // добавить файл в архив

@@ -1,6 +1,6 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+package archive;
+
+import command.ExitCommand;
 import java.nio.file.Paths;
 
 public class Archiver { //главный класс архиватор
@@ -13,6 +13,9 @@ public class Archiver { //главный класс архиватор
             ConsoleHelper.writeMessage("Введите путь к файлу, который будем архивировать:");
             String file = ConsoleHelper.readString();
             manager.createZip(Paths.get(file));
+
+            ExitCommand exitCommand = new ExitCommand();
+            exitCommand.execute();
         }
         catch (Exception ex){
             ex.printStackTrace();
