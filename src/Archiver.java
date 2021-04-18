@@ -6,14 +6,12 @@ import java.nio.file.Paths;
 public class Archiver { //главный класс архиватор
     public static void main(String[] args) {
         try{
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-            System.out.println("Введите полный путь архива:");
-            String zipFile = reader.readLine();
+            ConsoleHelper.writeMessage("Введите полный путь архива:");
+            String zipFile = ConsoleHelper.readString();
             ZipFileManager manager = new ZipFileManager(Paths.get(zipFile));
 
-            System.out.println("Введите путь к файлу, который будем архивировать:");
-            String file = reader.readLine();
+            ConsoleHelper.writeMessage("Введите путь к файлу, который будем архивировать:");
+            String file = ConsoleHelper.readString();
             manager.createZip(Paths.get(file));
         }
         catch (Exception ex){
