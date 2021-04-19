@@ -19,7 +19,7 @@ public class FileProperties { //свойства файлов в архиве
 
     @Override
     public String toString() {
-        return getSize() > 0? String.format("%s %d Kb (%d Kb) сжатие: %d%%", getName(), getSize() / 1024, getCompressedSize() / 1024, getCompressionRatio()) : getName();
+        return getSize() > 0? String.format("%s %f Kb (%f Kb) сжатие: %d%%", getName(), (float) getSize() / 1024, (float) getCompressedSize() / 1024, getCompressionRatio()) : getName();
     }
 
     public String getName() {
