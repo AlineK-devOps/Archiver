@@ -4,6 +4,7 @@ import exception.PathIsNotFoundException;
 import exception.WrongZipFileException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -19,6 +20,28 @@ public class ZipFileManager { //менеджер архива, совершае�
 
     public ZipFileManager(Path zipFile){
         this.zipFile = zipFile;
+    }
+
+    public void extractAll(Path outputFolder) throws Exception{ //распаковка архива в папку outputFolder
+        if (!Files.isRegularFile(zipFile)) //если архива не существует
+            throw new WrongZipFileException();
+
+        if (Files.notExists(outputFolder))
+            Files.createDirectories(outputFolder); //если дериктории не существует, то создаем её
+
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile))){ //входящий поток архива
+            ZipEntry entry;
+
+            while ((entry = zis.getNextEntry()) != null){ //считываем данные из архива
+                if (entry.isDirectory())
+                    new File(String.valueOf(outputFolder.resolve(entry.getName()))).mkdirs();
+                else{
+                    OutputStream out = Files.newOutputStream(outputFolder.resolve(entry.getName()));
+                    copyData(zis, out);
+                    out.close();
+                }
+            }
+        }
     }
 
     public void createZip(Path source) throws Exception{ //source - путь к тому, что будем архивировать
@@ -70,10 +93,8 @@ public class ZipFileManager { //менеджер архива, совершае�
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 copyData(zis, out);
                 properties.add(new FileProperties(entry.getName(), entry.getSize(), entry.getCompressedSize(), entry.getMethod())); //добавляем список файл из архива
+                zis.closeEntry();
             }
-        }
-        catch (Exception ex){
-            ex.printStackTrace();
         }
         return properties;
     }
