@@ -47,14 +47,52 @@ public class ZipFileManager { //менеджер архива, совершае�
         }
     }
 
+    public void addFiles(List<Path> absolutePathList) throws Exception{ //добавляет файлы в архив
+        if (!Files.isRegularFile(zipFile)) //если архива не существует
+            throw new WrongZipFileException();
+
+        Path tempZipFile = Files.createTempFile(null, null); //создаём временный архив
+
+        List<String> fileNames = new ArrayList<>(); //список переписанных файлов
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile));//входящий поток архива
+             ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(tempZipFile))){
+
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null){ //считываем данные из архива
+                zout.putNextEntry(new ZipEntry(entry.getName()));
+                copyData(zis, zout);
+                fileNames.add(entry.getName());
+                zout.closeEntry();
+                zis.closeEntry();
+            }
+
+            for (Path file : absolutePathList){
+                if (!Files.isRegularFile(file))
+                    throw new PathIsNotFoundException();
+
+                if (!fileNames.contains(String.valueOf(file.getFileName()))){ //если файла нет в архиве
+                    ConsoleHelper.writeMessage("Файл " + file.getFileName() + " добавлен в архив.");
+                    addNewZipEntry(zout, file.getParent(), file.getFileName());
+                }
+                else //если файл уже есть в архиве
+                    ConsoleHelper.writeMessage("Файл уже есть в архиве.");
+            }
+            Files.move(tempZipFile, zipFile, StandardCopyOption.REPLACE_EXISTING); //замена старого архива временным
+        }
+    }
+
+    public void addFile(Path absolutePath) throws Exception{
+        addFiles(Collections.singletonList(absolutePath));
+    }
+
     public void removeFiles(List<Path> pathList) throws Exception{ //удаляет файлы из архива
         if (!Files.isRegularFile(zipFile)) //если архива не существует
             throw new WrongZipFileException();
 
         Path tempZipFile = Files.createTempFile(null, null); //создаём временный архив
 
-        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile));
-        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(tempZipFile))){ //входящий поток архива
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile)); //входящий поток архива
+        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(tempZipFile))){
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null){ //считываем данные из архива
@@ -64,9 +102,8 @@ public class ZipFileManager { //менеджер архива, совершае�
                     zout.closeEntry();
                     zis.closeEntry();
                 }
-                else{ //если файл содержится в списке на удаление, вывести сообщение о том, что файл удалён
+                else //если файл содержится в списке на удаление, вывести сообщение о том, что файл удалён
                     ConsoleHelper.writeMessage("Файл " + entry.getName() + " удалён.");
-                }
             }
             Files.move(tempZipFile, zipFile, StandardCopyOption.REPLACE_EXISTING); //замена старого архива временным
         }
