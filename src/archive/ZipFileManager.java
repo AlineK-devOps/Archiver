@@ -9,7 +9,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -42,6 +45,35 @@ public class ZipFileManager { //менеджер архива, совершае�
                 }
             }
         }
+    }
+
+    public void removeFiles(List<Path> pathList) throws Exception{ //удаляет файлы из архива
+        if (!Files.isRegularFile(zipFile)) //если архива не существует
+            throw new WrongZipFileException();
+
+        Path tempZipFile = Files.createTempFile(null, null); //создаём временный архив
+
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile));
+        ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(tempZipFile))){ //входящий поток архива
+
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null){ //считываем данные из архива
+                if (!pathList.contains(Paths.get(entry.getName()))){ //если файл не содержится в списке на удаление, переписать его в новый архив
+                    zout.putNextEntry(new ZipEntry(entry.getName()));
+                    copyData(zis, zout);
+                    zout.closeEntry();
+                    zis.closeEntry();
+                }
+                else{ //если файл содержится в списке на удаление, вывести сообщение о том, что файл удалён
+                    ConsoleHelper.writeMessage("Файл " + entry.getName() + " удалён.");
+                }
+            }
+            Files.move(tempZipFile, zipFile, StandardCopyOption.REPLACE_EXISTING); //замена старого архива временным
+        }
+    }
+
+    public void removeFile(Path path) throws Exception{ //удаляет файлы из архива
+        removeFiles(Collections.singletonList(path));
     }
 
     public void createZip(Path source) throws Exception{ //source - путь к тому, что будем архивировать
